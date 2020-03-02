@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-"""Tests for `data_access` package."""
+"""Tests for `cy_data_access` package."""
 
 import pytest
 
 from click.testing import CliRunner
 
-# from data_access import data_access
+# from cy_data_access import cy_data_access
 from CYDataAccess import cli
 
 
@@ -31,7 +31,7 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert 'data_access.cli.main' in result.output
+    assert 'cy_data_access.cli.main' in result.output
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output

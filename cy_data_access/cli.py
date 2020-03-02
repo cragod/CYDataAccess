@@ -1,13 +1,13 @@
-"""Console script for data_access."""
+"""Console script for cy_data_access."""
 import sys
 import click
 
 
 @click.command()
 def main(args=None):
-    """Console script for data_access."""
+    """Console script for cy_data_access."""
     click.echo("Replace this message by putting your code into "
-               "data_access.cli.main")
+               "cy_data_access.cli.main")
     click.echo("See click documentation at https://click.palletsprojects.com/")
     return 0
 
