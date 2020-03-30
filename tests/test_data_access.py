@@ -2,36 +2,23 @@
 
 """Tests for `cy_data_access` package."""
 
+from CYDataAccess import cli
 import pytest
 
 from click.testing import CliRunner
+from cy_components.utils.coin_pair import CoinPair
+from cy_components.defines.enums import TimeFrame
+from cy_widgets.exchange.provider import CCXTProvider, ExchangeType
+from cy_widgets.fetcher.exchange import ExchangeFetcher
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, DECIMAL, DateTime
 
 # from cy_data_access import cy_data_access
-from CYDataAccess import cli
 
 
-@pytest.fixture
-def response():
-    """Sample pytest fixture.
+def test_save_candle_to_db():
+    engine = engine = create_engine("mysql+pymysql://root:lcrc881116@149.129.48.95:3306/market", echo=True)
+    provider = CCXTProvider(api_key="", secret="", params={}, exg_type=ExchangeType.Bitfinex)
 
-    See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    # import requests
-    # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
-
-
-def test_content(response):
-    """Sample pytest test function with the pytest fixture as an argument."""
-    # from bs4 import BeautifulSoup
-    # assert 'GitHub' in BeautifulSoup(response.content).title.string
-
-
-def test_command_line_interface():
-    """Test the CLI."""
-    runner = CliRunner()
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert 'cy_data_access.cli.main' in result.output
-    help_result = runner.invoke(cli.main, ['--help'])
-    assert help_result.exit_code == 0
-    assert '--help  Show this message and exit.' in help_result.output
+    fetcher = ExchangeFetcher(provider)
+    df = fetcher.fetch_historical_candle_data(CoinPair('ETH', 'BTC'), TimeFrame.Minute_30, 1585131432, 500)
+    print(df)
