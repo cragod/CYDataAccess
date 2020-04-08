@@ -11,14 +11,10 @@ from cy_components.defines.enums import TimeFrame
 from cy_widgets.exchange.provider import CCXTProvider, ExchangeType
 from cy_widgets.fetcher.exchange import ExchangeFetcher
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, DECIMAL, DateTime
+from sqlalchemy.ext.declarative import declarative_base
 
 # from cy_data_access import cy_data_access
 
 
 def test_save_candle_to_db():
-    engine = engine = create_engine("mysql+pymysql://root:lcrc881116@149.129.48.95:3306/market", echo=True)
-    provider = CCXTProvider(api_key="", secret="", params={}, exg_type=ExchangeType.Bitfinex)
-
-    fetcher = ExchangeFetcher(provider)
-    df = fetcher.fetch_historical_candle_data(CoinPair('ETH', 'BTC'), TimeFrame.Minute_30, 1585131432, 500)
-    print(df)
+    Base = declarative_base()
