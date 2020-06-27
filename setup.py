@@ -37,7 +37,7 @@ setup(
     description="DataAccess of quant app",
     entry_points={
         'console_scripts': [
-            'cy_data_access=cy_data_access.cli:main',
+            'cydb=cy_data_access.cli:cydb',
         ],
     },
     install_requires=requirements,

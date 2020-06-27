@@ -1,5 +1,12 @@
-from ..connection.define import *
+from ..connection.connect import *
 from pymodm import fields, MongoModel
+from enum import IntEnum
+
+
+class CCXTExchangeType(IntEnum):
+    """交易所类型"""
+    Unknown = 0
+    HuobiPro = 1
 
 
 class Sequence(MongoModel):
