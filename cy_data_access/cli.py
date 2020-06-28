@@ -29,5 +29,9 @@ def add_ccxt_config(ctx, key, secret, password, type):
     e_type = 0
     if type == 'hbp':
         e_type = CCXTExchangeType.HuobiPro.value
-    result = CCXTConfiguration(identifier=Sequence.fetch_next_id(CN_CCXT_CONFIG), app_key=key, app_secret=secret, app_pw=password, e_type=e_type).save()
+    result = CCXTConfiguration(identifier=Sequence.fetch_next_id(CN_CCXT_CONFIG),
+                               app_key=key,
+                               app_secret=secret,
+                               app_pw=password,
+                               e_type=e_type).save()
     c.echo('Result: {}(id: {})'.format(result, result.identifier))
