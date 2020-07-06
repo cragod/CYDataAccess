@@ -8,6 +8,10 @@ DB_CONFIG = 'cfg'
 CN_SEQUENCE = 'sequence'
 CN_CCXT_CONFIG = 'cxt'
 
+# ==== Market ====
+
+DB_MARKET = 'market'
+
 
 def connect_db(user, password, host, db_name):
     # 连接到数据库
