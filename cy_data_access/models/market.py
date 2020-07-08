@@ -31,6 +31,11 @@ class CandleRecord(MongoModel):
         return results
 
 
+def candle_record_class_with_components(exchange_name, coin_pair, time_frame) -> CandleRecord:
+    """Convenience"""
+    return candle_record_class('{}_{}_{}'.format(exchange_name.lower(), coin_pair.formatted('_'), time_frame.value))
+
+
 def candle_record_class(collection_name) -> CandleRecord:
     """Define a record class with a specify collection name"""
     assert collection_name is not None and isinstance(collection_name, str)
