@@ -1,4 +1,5 @@
 from pymodm import MongoModel, fields
+from bson.codec_options import CodecOptions
 from ..connection.connect import DB_MARKET
 
 
@@ -14,6 +15,7 @@ class CandleRecord(MongoModel):
 
     class Meta:
         connection_alias = DB_MARKET
+        codec_options = CodecOptions(tz_aware=True)
 
     @classmethod
     def bulk_upsert_records(cls, json_list, key_name='_id'):
@@ -33,7 +35,7 @@ class CandleRecord(MongoModel):
 
 def candle_record_class_with_components(exchange_name, coin_pair, time_frame) -> CandleRecord:
     """Convenience"""
-    return candle_record_class('{}_{}_{}'.format(exchange_name.lower(), coin_pair.formatted('_'), time_frame.value))
+    return candle_record_class('{}_{}_{}'.format(exchange_name.lower(), coin_pair.formatted('_').lower(), time_frame.value.lower()))
 
 
 def candle_record_class(collection_name) -> CandleRecord:
