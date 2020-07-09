@@ -10,5 +10,4 @@ def convert_df_to_json_list(df: pd.DataFrame, primary_column_name=None):
         df.rename({primary_column_name: '_id'}, axis=1, inplace=True)
     json_list = json.loads(df.T.to_json()).values()
     json_list = CandleFormatter.convert_json_timestamp_to_date(json_list, column_name='_id', tz=pytz.utc)
-    print(json_list)
     return json_list
