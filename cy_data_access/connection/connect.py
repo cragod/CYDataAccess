@@ -13,11 +13,11 @@ CN_CCXT_CONFIG = 'cxt'
 DB_MARKET = 'market'
 
 
-def connect_db(user, password, host, db_name):
+def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
     # 连接到数据库
     uri = "mongodb://{}:{}@{}/{}?authSource=admin".format(user, password, host, db_name)
     connect(uri, db_name)
 
 
-def connect_db_env(host, db_name):
+def connect_db_env(host='127.0.0.1:27017', db_name=None):
     connect_db(os.environ['DB_MNR_USER'], os.environ['DB_MNR_PWD'], host, db_name)
