@@ -12,6 +12,10 @@ CN_CCXT_CONFIG = 'cxt'
 
 DB_MARKET = 'market'
 
+# ==== Backtest ====
+
+DB_BACKTEST = 'backtest'
+
 
 def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
     # 连接到数据库
