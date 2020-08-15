@@ -12,6 +12,12 @@ CN_CCXT_CONFIG = 'cxt'
 
 DB_MARKET = 'market'
 
+# ==== Position ====
+
+DB_POSITION = 'position'
+
+CN_AIMS_POS = 'aims'
+
 # ==== Backtest ====
 
 DB_BACKTEST = 'backtest'
