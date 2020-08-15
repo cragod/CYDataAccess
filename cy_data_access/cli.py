@@ -20,7 +20,7 @@ def cydb(ctx, db_user, db_pwd, db_host):
 @c.option('--secret', type=str, prompt=True, required=True)
 @c.password_option(confirmation_prompt=False)
 @c.option('--type',
-          type=c.Choice(['hbp'], case_sensitive=False), prompt=True)
+          type=c.Choice(['okex', 'hbp', 'binance'], case_sensitive=False), prompt=True)
 @c.pass_context
 def add_ccxt_config(ctx, key, secret, password, type):
     # connect db
@@ -29,6 +29,10 @@ def add_ccxt_config(ctx, key, secret, password, type):
     e_type = 0
     if type == 'hbp':
         e_type = CCXTExchangeType.HuobiPro.value
+    elif type == 'okex':
+        e_type = CCXTExchangeType.Okex
+    elif type == 'binance':
+        e_type = CCXTExchangeType.Binance
     result = CCXTConfiguration(identifier=Sequence.fetch_next_id(CN_CCXT_CONFIG),
                                app_key=key,
                                app_secret=secret,

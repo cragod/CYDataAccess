@@ -6,7 +6,9 @@ from enum import IntEnum
 class CCXTExchangeType(IntEnum):
     """交易所类型"""
     Unknown = 0
-    HuobiPro = 1
+    Okex = 1
+    HuobiPro = 2
+    Binance = 3
 
 
 class Sequence(MongoModel):
