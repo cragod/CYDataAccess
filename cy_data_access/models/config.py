@@ -38,9 +38,18 @@ class CCXTConfiguration(MongoModel):
     identifier = fields.IntegerField(primary_key=True)
     app_key = fields.CharField(min_length=3)
     app_secret = fields.CharField(min_length=3)
-    app_pw = fields.CharField(min_length=3)
+    app_pw = fields.CharField(min_length=0)
     e_type = fields.IntegerField(mongo_name='type')
 
     class Meta:
         collection_name = CN_CCXT_CONFIG
         connection_alias = DB_CONFIG
+
+    @classmethod
+    def configuration_with(cls, type: CCXTExchangeType):
+        try:
+            ccxt_config = cls.objects.get({'type': type.value})
+            return ccxt_config
+        except Exception as e:
+            print(str(e))
+            return None
