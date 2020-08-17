@@ -56,3 +56,26 @@ class AIMSPosition(Position):
     class Meta:
         connection_alias = DB_POSITION
         collection_name = CN_AIMS_POS
+
+
+class AIMSPositionSelling(AIMSPosition):
+    """ AIMS 卖出记录 """
+    # 卖出价格
+    close_price = fields.FloatField()
+    # 盈利
+    profit_amount = fields.FloatField()
+    # 日期
+    date = fields.DateTimeField()
+
+    class Meta:
+        connection_alias = DB_POSITION
+        collection_name = CN_AIMS_POS_CLOSE
+
+    @classmethod
+    def with_aims_position(cls, position: AIMSPosition):
+        pos = AIMSPositionSelling()
+        pos.hold = position.hold
+        pos.cost = position.cost
+        pos.exchange_name = position.exchange_name
+        pos.coin_pair = position.coin_pair
+        return pos

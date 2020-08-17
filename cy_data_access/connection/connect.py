@@ -17,6 +17,7 @@ DB_MARKET = 'market'
 DB_POSITION = 'position'
 
 CN_AIMS_POS = 'aims'
+CN_AIMS_POS_CLOSE = 'aims_close'
 
 # ==== Backtest ====
 
