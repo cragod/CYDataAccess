@@ -1,11 +1,11 @@
 from ..connection.connect import *
 from pymodm import fields, MongoModel
 from enum import IntEnum
-from datetime import datetime
 
 
 class LogType(IntEnum):
     AIM = 0
+    AIP = 1
 
 
 class LogInfo(MongoModel):
