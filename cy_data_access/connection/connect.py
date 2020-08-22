@@ -23,6 +23,12 @@ CN_AIMS_POS_CLOSE = 'aims_close'
 
 DB_BACKTEST = 'backtest'
 
+# ==== Log ====
+
+DB_LOG = 'log'
+
+CN_COMMON_LOG = 'common'
+
 
 def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
     # 连接到数据库
