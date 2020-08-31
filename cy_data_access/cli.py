@@ -1,6 +1,8 @@
 import click as c
+import pandas as pd
 from .connection.connect import *
 from .models.config import *
+from .models.position import *
 
 
 @c.group()
@@ -23,6 +25,7 @@ def cydb(ctx, db_user, db_pwd, db_host):
           type=c.Choice(['okex', 'hbp', 'binance'], case_sensitive=False), prompt=True)
 @c.pass_context
 def add_ccxt_config(ctx, key, secret, password, type):
+    # 添加 ccxt 配置
     # connect db
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
     # save config
@@ -39,3 +42,20 @@ def add_ccxt_config(ctx, key, secret, password, type):
                                app_pw=password,
                                e_type=e_type).save()
     c.echo('Result: {}(id: {})'.format(result, result.identifier))
+
+
+@cydb.command()
+@c.pass_context
+def aims_profit(ctx):
+    # AMIS 收益
+    pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
+    # connect db
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
+    connect_db_env(db_name=DB_POSITION)
+    selling = list(AIMSPositionSelling.objects.values())
+    df = pd.DataFrame(selling)
+    df.drop(['_cls', '_id'], axis=1, inplace=True)
+    print("""
+    {}
+    sum: {}
+    """.format(df, df['profit_amount'].sum()))
