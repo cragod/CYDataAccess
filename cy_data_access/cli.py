@@ -59,3 +59,21 @@ def aims_profit(ctx):
     {}
     sum: {}
     """.format(df, df['profit_amount'].sum()))
+
+
+@cydb.command()
+@c.pass_context
+def aims_position(ctx):
+    # AMIS 仓位
+    pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
+    # connect db
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
+    connect_db_env(db_name=DB_POSITION)
+    selling = list(AIMSPosition.objects.aggregate({
+        '$addFields': {
+            'average_costing': {'$divide': ['$cost', '$hold']}
+        }
+    }))
+    df = pd.DataFrame(selling)
+    df.drop(['_cls', '_id'], axis=1, inplace=True)
+    print(df)
