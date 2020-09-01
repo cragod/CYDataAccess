@@ -71,7 +71,14 @@ def aims_position(ctx):
     connect_db_env(db_name=DB_POSITION)
     selling = list(AIMSPosition.objects.aggregate({
         '$addFields': {
-            'average_costing': {'$divide': ['$cost', '$hold']}
+            'average_costing':
+            {
+                '$cond': {
+                    'if': {'$gt': ['$hold', 0]},
+                    'then': {'$divide': ['$cost', '$hold']},
+                    'else': 0
+                }
+            }
         }
     }))
     df = pd.DataFrame(selling)
