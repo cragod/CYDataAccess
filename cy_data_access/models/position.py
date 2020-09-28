@@ -1,4 +1,5 @@
 from ..connection.connect import *
+from datetime import datetime
 from pymodm import fields, MongoModel
 
 
@@ -53,6 +54,13 @@ class Position(MongoModel):
 
 class AIMSPosition(Position):
     """ AIMS 策略仓位 """
+    # 仓位更新日期
+    update_date = fields.DateTimeField()
+
+    def update(self, increase_cost, increase_hold):
+        self.update_date = datetime.now()
+        super().update(increase_cost, increase_hold)
+
     class Meta:
         connection_alias = DB_POSITION
         collection_name = CN_AIMS_POS
