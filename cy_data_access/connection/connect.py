@@ -19,6 +19,8 @@ DB_POSITION = 'position'
 CN_AIMS_POS = 'aims'
 CN_AIMS_POS_CLOSE = 'aims_close'
 
+CN_AIP_RECORDS = 'aip_record'
+
 # ==== Backtest ====
 
 DB_BACKTEST = 'backtest'

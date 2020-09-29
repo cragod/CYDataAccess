@@ -87,3 +87,16 @@ class AIMSPositionSelling(AIMSPosition):
         pos.exchange_name = position.exchange_name
         pos.coin_pair = position.coin_pair
         return pos
+
+
+class AIPRecord(MongoModel):
+    """ 定投记录 """
+    exchange = fields.CharField()
+    coin_pair = fields.CharField()
+    date = fields.DateTimeField()
+    cost = fields.FloatField()
+    amount = fields.FloatField()
+
+    class Meta:
+        connection_alias = DB_POSITION
+        connection_name = CN_AIP_RECORDS
