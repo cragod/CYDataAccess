@@ -1,5 +1,6 @@
 import click as c
 import pandas as pd
+from datetime import datetime
 from .connection.connect import *
 from .models.config import *
 from .models.position import *
@@ -84,3 +85,20 @@ def aims_position(ctx):
     df = pd.DataFrame(selling)
     df.drop(['_cls', '_id'], axis=1, inplace=True)
     print(df)
+
+
+@cydb.command()
+@c.option('--exchange', type=str, prompt=True, required=True)
+@c.option('--coin_pair', type=str, prompt=True, required=True)
+@c.option('--cost', type=float, prompt=True, required=True)
+@c.option('--amount', type=float, prompt=True, required=True)
+@c.pass_context
+def add_aip_record(ctx, exchange, coin_pair, cost, amount):
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
+    record = AIPRecord()
+    record.exchange = exchange
+    record.coin_pair = coin_pair.upper()
+    record.cost = cost
+    record.amount = amount
+    record.date = datetime.now()
+    record.save()
