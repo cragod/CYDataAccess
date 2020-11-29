@@ -5,7 +5,7 @@ from datetime import datetime
 from .connection.connect import *
 from .models.config import *
 from .models.position import *
-from .models.finance import *
+from .models.financial import *
 
 
 @c.group()
