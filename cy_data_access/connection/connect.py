@@ -31,6 +31,14 @@ DB_LOG = 'log'
 
 CN_COMMON_LOG = 'common'
 
+# ==== Financial ====
+
+DB_FINANCIAL = 'financial'
+
+CN_FIN_HOLDER = 'holder'
+CN_FIN_RECORD = 'op_record'
+CN_FIN_EVENT = 'event'
+
 
 def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
     # 连接到数据库

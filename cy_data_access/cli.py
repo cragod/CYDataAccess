@@ -1,9 +1,11 @@
 import click as c
 import pandas as pd
+import pytz
 from datetime import datetime
 from .connection.connect import *
 from .models.config import *
 from .models.position import *
+from .models.finance import *
 
 
 @c.group()
@@ -94,6 +96,7 @@ def aims_position(ctx):
 @c.option('--amount', type=float, prompt=True, required=True)
 @c.pass_context
 def add_aip_record(ctx, exchange, coin_pair, cost, amount):
+    """添加定投记录"""
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
     record = AIPRecord()
     record.exchange = exchange
@@ -102,3 +105,72 @@ def add_aip_record(ctx, exchange, coin_pair, cost, amount):
     record.amount = amount
     record.date = datetime.now()
     record.save()
+
+
+@c.group()
+@c.option('--db-user', envvar='DB_CLI_USER', required=True)
+@c.option('--db-pwd', envvar='DB_CLI_PWD', required=True)
+@c.option('--db-host', default='127.0.0.1:27017', required=True)
+@c.pass_context
+def cyfin(ctx, db_user, db_pwd, db_host):
+    ctx.ensure_object(dict)
+    ctx.obj['db_u'] = db_user
+    ctx.obj['db_p'] = db_pwd
+    ctx.obj['db_h'] = db_host
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
+    print("Current holders:")
+    for holder in list(Holder.objects.project({'id': 1, "name": 1, 'balance': 1, 'update_date': 1}).values()):
+        print("{}:\t{}\t{}\t{}".format(holder['_id'], holder['name'], holder['balance'], holder['update_date']))
+    print()
+
+
+@cyfin.command()
+@c.option('--name', type=str, prompt=True, required=True)
+@c.option('--balance', type=float, prompt=True, default=0, required=True)
+@c.option('--level',
+          type=c.Choice(['SUPER', 'A'], case_sensitive=False), default='A', prompt=True)
+@c.pass_context
+def add_holder(ctx, name, balance, level):
+    """添加持仓人"""
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
+    if len(list(Holder.objects.raw({'name': {"$regex": name, "$options": '-i'}}))) > 0:
+        print('{}已存在'.format(name.upper()))
+        return
+    holder = Holder()
+    holder.id = Sequence.fetch_next_id(CN_FIN_HOLDER)
+    holder.name = name
+    holder.balance = balance
+    holder.level = HolderLevel.level_from(level).value
+    holder.create_date = datetime.now().astimezone(tz=pytz.utc)
+    holder.update_date = holder.create_date
+    holder.save()
+
+
+@cyfin.command()
+@c.option('--holder_id', type=int, prompt=True, required=True)
+@c.option('--operation', type=c.Choice(['deposit', 'withdraw'], case_sensitive=False), prompt=True, default='deposit', required=True)
+@c.option('--amount', type=float, prompt='Amount[USDT]')
+@c.pass_context
+def update_holder_balance(ctx, holder_id, operation, amount):
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
+    try:
+        holder = Holder.objects.get({'_id': holder_id})
+        if operation.lower() == 'deposit':
+            holder.balance += amount
+        else:
+            holder.balance -= amount
+        holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
+        holder.save()
+        # event
+        event = Event(id=Sequence.fetch_next_id(CN_FIN_EVENT), content=operation,
+                      note=str(amount), date=holder.update_date)
+        event.save()
+        # record
+        record = Record(holder=holder_id, event=event.id, date=holder.update_date)
+        record.save()
+        holder.print_desc()
+    except Exception as e:
+        print(str(e))
+        return

@@ -38,6 +38,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cydb=cy_data_access.cli:cydb',
+            'cyfin=cy_data_access.cli:cyfin'
         ],
     },
     install_requires=requirements,
