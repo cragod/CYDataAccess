@@ -60,7 +60,8 @@ class Record(MongoModel):
     """持仓人相关操作记录"""
     holder = fields.IntegerField()
     event = fields.IntegerField()
-    content = fields.CharField()
+    balance_before = fields.FloatField()
+    balance_after = fields.FloatField()
     date = fields.DateTimeField()
 
     class Meta:
