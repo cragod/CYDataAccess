@@ -1,7 +1,7 @@
 import pytz
 from datetime import datetime
 from pymodm import fields, MongoModel
-from enum import IntEnum
+from enum import IntEnum, Enum
 from ..connection.connect import *
 
 
@@ -44,12 +44,26 @@ class Holder(MongoModel):
         connection_alias = DB_FINANCIAL
 
 
+class EventType(Enum):
+    DEPOSIT = 'deposit'
+    WITHDRAW = 'withdraw'
+    PROFIT = 'profit'
+
+
 class Event(MongoModel):
     """事件信息"""
     id = fields.IntegerField(primary_key=True)
     content = fields.CharField()
     note = fields.CharField()
     date = fields.DateTimeField()
+
+    @staticmethod
+    def event_with(type: EventType, id: int):
+        event = Event()
+        event.id = id
+        event.content = type.value
+        event.date = datetime.now().replace(tzinfo=pytz.utc)
+        return event
 
     class Meta:
         collection_name = CN_FIN_EVENT
