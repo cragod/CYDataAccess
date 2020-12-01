@@ -10,6 +10,7 @@ class HolderType(IntEnum):
 
 
 class HolderLevel(IntEnum):
+    SSR = 999  # Fixed profit
     SUPER = 99
     A = 0
 
@@ -17,6 +18,8 @@ class HolderLevel(IntEnum):
     def level_from(text):
         if text.lower() == 'super':
             return HolderLevel.SUPER
+        elif text.lower() == 'ssr':
+            return HolderLevel.SSR
         else:
             return HolderLevel.A
 
@@ -58,10 +61,11 @@ class Event(MongoModel):
     date = fields.DateTimeField()
 
     @staticmethod
-    def event_with(type: EventType, id: int):
+    def event_with(type: EventType, id: int, note):
         event = Event()
         event.id = id
         event.content = type.value
+        event.note = note
         event.date = datetime.now().replace(tzinfo=pytz.utc)
         return event
 
@@ -77,6 +81,16 @@ class Record(MongoModel):
     balance_before = fields.FloatField()
     balance_after = fields.FloatField()
     date = fields.DateTimeField()
+
+    @staticmethod
+    def profit_record(holder_id, event_id, balance, profit):
+        record = Record()
+        record.holder = holder_id
+        record.event = event_id
+        record.balance_before = balance
+        record.balance_after = balance + profit
+        record.date = datetime.now().astimezone(tz=pytz.utc)
+        return record
 
     class Meta:
         collection_name = CN_FIN_RECORD

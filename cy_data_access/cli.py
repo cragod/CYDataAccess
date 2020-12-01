@@ -128,7 +128,7 @@ def cyfin(ctx, db_user, db_pwd, db_host):
 @c.option('--name', type=str, prompt=True, required=True)
 @c.option('--balance', type=float, prompt=True, default=0, required=True)
 @c.option('--level',
-          type=c.Choice(['SUPER', 'A'], case_sensitive=False), default='A', prompt=True)
+          type=c.Choice(['SSR', 'SUPER', 'A'], case_sensitive=False), default='A', prompt=True)
 @c.pass_context
 def add_holder(ctx, name, balance, level):
     """添加持仓人"""
@@ -237,3 +237,105 @@ def holder_events(ctx, holder_id):
     for record in records:
         print("{}: \t{}\t{}\t{}\t{}\t{}\t{}".format(
             holder_id, record['name'], record['balance_before'], record['balance_after'], record['event_content'], record['event_note'], record['event_date']))
+
+
+@cyfin.command()
+@c.option('--event_desc', type=str, required=True, prompt=True)
+@c.option('--profit', type=float, required=True, prompt=True)
+@c.option('--fixed_percent', type=float, required=True, prompt=True)
+@c.pass_context
+def distribute_profit(ctx, event_desc, profit, fixed_percent):
+    """分配利润"""
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
+
+    event = Event.event_with(EventType.PROFIT, Sequence.fetch_next_id(DB_FINANCIAL), event_desc)
+
+    if profit < 1e-6:
+        print("这么点利润分配啥")
+
+    # 固定利润
+    fixed_percent = max(fixed_percent, 0)
+    fixed_profit = profit * fixed_percent
+    fp_holder = None
+    if fixed_percent > 0:
+        try:
+            fp_holder = Holder.objects.get({'level': HolderLevel.SSR.value})
+            fp_holder.balance += fixed_profit
+        except Exception as e:
+            print("分配固定利润错误：", str(e))
+            return
+
+    # 剩余利润分配
+    profit *= (1 - fixed_percent)
+
+    try:
+        filter = {
+            'status': HolderStatus.NORMAL.value,
+            'level': {
+                "$lt": HolderLevel.SSR.value
+            }
+        }
+        holders = list(Holder.objects.raw(filter))
+        pipeline = [
+            {
+                '$group': {
+                    '_id': None,
+                    'total': {
+                        '$sum': '$balance'
+                    },
+                    'holders': {
+                        '$push': {
+                            '_id': '$_id',
+                            'balance': '$balance',
+                        }
+                    }
+                }
+            }, {
+                '$unwind': {
+                    'path': '$holders',
+                    'preserveNullAndEmptyArrays': False
+                }
+            }, {
+                '$project': {
+                    '_id': '$holders._id',
+                    'balance': '$holders.balance',
+                    'percent': {
+                        '$divide': [
+                            '$holders.balance', '$total'
+                        ]
+                    }
+                }
+            }
+        ]
+        percents = {x['_id']: x['percent'] for x in list(Holder.objects.raw(filter).aggregate(*pipeline))}
+        # 分配
+        if sum([percents[x] for x in percents]) == 1:
+            print('分配内容：', event.content, event.note)
+            print('拟分配方案：')
+            if fp_holder is not None:
+                print(fp_holder.name, fixed_profit)
+            # holder & records
+            records = list()
+            for holder in holders:
+                percented_profit = profit * percents[holder.id]
+                # record
+                record = Record.profit_record(holder.id, event.id, holder.balance, percented_profit)
+                records.append(record)
+                # holder
+                holder.balance += percented_profit
+                print(holder.id, holder.name, "{}({}%)".format(
+                    round(percented_profit, 4), round(percents[holder.id] * 100, 2)))
+            if c.confirm('确认提交?'):
+                event.save()
+                for h in holders:
+                    h.save()
+                for r in records:
+                    r.save()
+                print("完事儿")
+            else:
+                print("取消")
+        else:
+            print("持仓比例错误，检查一下")
+    except Exception as e:
+        print("分配持仓人利润错误", str(e))
