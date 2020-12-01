@@ -249,7 +249,8 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
 
-    event = Event.event_with(EventType.PROFIT, Sequence.fetch_next_id(DB_FINANCIAL), event_desc)
+    event = Event.event_with(EventType.PROFIT, Sequence.fetch_next_id(
+        DB_FINANCIAL), "{}({} USDT)".format(event_desc, profit))
 
     if profit < 1e-6:
         print("这么点利润分配啥")
@@ -262,6 +263,7 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
         try:
             fp_holder = Holder.objects.get({'level': HolderLevel.SSR.value})
             fp_holder.balance += fixed_profit
+            fp_holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
         except Exception as e:
             print("分配固定利润错误：", str(e))
             return
@@ -324,10 +326,13 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
                 records.append(record)
                 # holder
                 holder.balance += percented_profit
+                holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
                 print(holder.id, holder.name, "{}({}%)".format(
                     round(percented_profit, 4), round(percents[holder.id] * 100, 2)))
             if c.confirm('确认提交?'):
                 event.save()
+                if fp_holder is not None:
+                    fp_holder.save()
                 for h in holders:
                     h.save()
                 for r in records:
