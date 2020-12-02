@@ -250,7 +250,7 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
 
     event = Event.event_with(EventType.PROFIT, Sequence.fetch_next_id(
-        DB_FINANCIAL), "{}({} USDT)".format(event_desc, profit))
+        CN_FIN_EVENT), "{}({} USDT)".format(event_desc, profit))
 
     if profit < 1e-6:
         print("这么点利润分配啥")
