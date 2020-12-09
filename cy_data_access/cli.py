@@ -255,6 +255,7 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
     if profit < 1e-6:
         print("这么点利润分配啥")
 
+    records = list()
     # 固定利润
     fixed_percent = max(fixed_percent, 0)
     fixed_profit = profit * fixed_percent
@@ -264,6 +265,8 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
             fp_holder = Holder.objects.get({'level': HolderLevel.SSR.value})
             fp_holder.balance += fixed_profit
             fp_holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
+            record = Record.profit_record(fp_holder.id, event.id, fp_holder.balance, fixed_profit)
+            records.append(record)
         except Exception as e:
             print("分配固定利润错误：", str(e))
             return
@@ -318,7 +321,6 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
             if fp_holder is not None:
                 print(fp_holder.name, fixed_profit)
             # holder & records
-            records = list()
             for holder in holders:
                 percented_profit = profit * percents[holder.id]
                 # record
