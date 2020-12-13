@@ -24,6 +24,9 @@ CN_AIP_RECORDS = 'aip_record'
 # ==== Backtest ====
 
 DB_BACKTEST = 'backtest'
+DB_BACKTEST_SIGNAL = 'bt_signals'
+
+CN_BACKTEST_OVERVIEW = 'overview'
 
 # ==== Log ====
 
