@@ -6,6 +6,7 @@ from .connection.connect import *
 from .models.config import *
 from .models.position import *
 from .models.financial import *
+from .models.crawler import *
 
 
 @c.group()
@@ -105,6 +106,24 @@ def add_aip_record(ctx, exchange, coin_pair, cost, amount):
     record.amount = amount
     record.date = datetime.now()
     record.save()
+
+
+@cydb.command()
+@c.option('--exchange_type', type=c.Choice(["1", "2"]), prompt='抓取类型：[1. 币安合约; 2. OK合约]', default="1")
+@c.option('--coin_pair', type=str, prompt='币对: [币安合约: BTCUSD_201225]', required=True)
+@c.option('--time_frame', type=str, prompt='K线间隔：5m, 15m ...', required=True)
+@c.pass_context
+def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
+    """添加抓K线配置"""
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CRAWLER)
+    crawler = CrawlerRealtimeConfig()
+    if int(exchange_type) == 1:
+        crawler.exchange_type = "binance_delivery"
+    elif int(exchange_type) == 2:
+        crawler.exchange_type = "ok_contract"
+    crawler.coin_pair = coin_pair
+    crawler.time_frame = time_frame
+    crawler.save()
 
 
 @c.group()

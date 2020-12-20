@@ -42,6 +42,13 @@ CN_FIN_HOLDER = 'holder'
 CN_FIN_RECORD = 'op_record'
 CN_FIN_EVENT = 'event'
 
+# ==== Cawler ====
+
+DB_CRAWLER = 'crawler'
+
+CN_REALTIME_CRAWLER_CFG = 'realtime_cfg'
+CN_FULL_CRAWLER_CFG = 'full_cfg'
+
 
 def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
     # 连接到数据库
