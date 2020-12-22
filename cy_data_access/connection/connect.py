@@ -12,6 +12,12 @@ CN_CCXT_CONFIG = 'cxt'
 
 DB_MARKET = 'market'
 
+# ==== Strategy ====
+
+DB_STRATEGY = 'strategy'
+
+CN_STRATEGY_CFG = 'config'
+
 # ==== Position ====
 
 DB_POSITION = 'position'
