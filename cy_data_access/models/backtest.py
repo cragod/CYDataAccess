@@ -8,7 +8,7 @@ class BacktestOverview(MongoModel):
 
     # 一次回测的整体统一标识
     task_identifier = fields.CharField()
-    # 策略标识 「Bolling|m:20,n:2|5T|20200202,20201022」(需要用来)
+    # 策略标识 「Bolling|m:20;n:2;5T|20200202,20201022」
     param_identifier = fields.CharField()
     equity_curve = fields.FloatField()
     statics_info = fields.OrderedDictField()
