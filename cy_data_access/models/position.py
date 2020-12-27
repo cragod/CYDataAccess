@@ -1,4 +1,5 @@
 from ..connection.connect import *
+from ..models.config import *
 from datetime import datetime
 from pymodm import fields, MongoModel
 
@@ -100,3 +101,27 @@ class AIPRecord(MongoModel):
     class Meta:
         connection_alias = DB_POSITION
         connection_name = CN_AIP_RECORDS
+
+
+class StrategyPosition(MongoModel):
+    """ 策略仓位信息 """
+    identifier = fields.IntegerField(primary_key=True)
+    # 策略的 ID
+    strategy_id = fields.IntegerField()
+    # 仓位（本位币）
+    cost = fields.FloatField()
+    # 仓位（交易币）
+    hold = fields.FloatField()
+
+    class Meta:
+        connection_alias = DB_POSITION
+        collection_name = CN_STRATEGY_POS
+
+    @classmethod
+    def position_with(cls, position_id):
+        """获取仓位信息、无则创建 """
+        try:
+            return cls.objects.raw({'_id': position_id}).first()
+        except Exception as e:
+            print(e)
+            return cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS), cost=0, hold=0)

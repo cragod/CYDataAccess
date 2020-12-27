@@ -14,9 +14,10 @@ DB_MARKET = 'market'
 
 # ==== Strategy ====
 
-DB_STRATEGY = 'strategy'
+DB_QUANT = 'quant'
 
-CN_STRATEGY_CFG = 'config'
+CN_STRATEGY = 'strategy'  # 交易策略
+CN_BRICK_CARRIER = 'brick_carrier'  # 搬砖器配置
 
 # ==== Position ====
 
@@ -26,6 +27,8 @@ CN_AIMS_POS = 'aims'
 CN_AIMS_POS_CLOSE = 'aims_close'
 
 CN_AIP_RECORDS = 'aip_record'
+
+CN_STRATEGY_POS = 'strategy_position '
 
 # ==== Backtest ====
 
@@ -48,7 +51,7 @@ CN_FIN_HOLDER = 'holder'
 CN_FIN_RECORD = 'op_record'
 CN_FIN_EVENT = 'event'
 
-# ==== Cawler ====
+# ==== Crawler ====
 
 DB_CRAWLER = 'crawler'
 

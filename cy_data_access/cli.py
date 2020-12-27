@@ -7,6 +7,7 @@ from .models.config import *
 from .models.position import *
 from .models.financial import *
 from .models.crawler import *
+from .models.quant import *
 
 
 @c.group()
@@ -27,8 +28,9 @@ def cydb(ctx, db_user, db_pwd, db_host):
 @c.password_option(confirmation_prompt=False, required=False)
 @c.option('--type',
           type=c.Choice(['okex', 'hbp', 'binance'], case_sensitive=False), prompt=True)
+@c.option('--desc', type=str, prompt=True, required=False)
 @c.pass_context
-def add_ccxt_config(ctx, key, secret, password, type):
+def add_ccxt_config(ctx, key, secret, password, type, desc):
     # 添加 ccxt 配置
     # connect db
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
@@ -37,14 +39,15 @@ def add_ccxt_config(ctx, key, secret, password, type):
     if type == 'hbp':
         e_type = CCXTExchangeType.HuobiPro
     elif type == 'okex':
-        e_type = CCXTExchangeType.Okex
+        e_type = CCXTExchangeType.OKEx
     elif type == 'binance':
         e_type = CCXTExchangeType.Binance
     result = CCXTConfiguration(identifier=Sequence.fetch_next_id(CN_CCXT_CONFIG),
                                app_key=key,
                                app_secret=secret,
                                app_pw=password,
-                               e_type=e_type).save()
+                               e_type=e_type,
+                               desc=desc).save()
     c.echo('Result: {}(id: {})'.format(result, result.identifier))
 
 
@@ -110,7 +113,7 @@ def add_aip_record(ctx, exchange, coin_pair, cost, amount):
 
 @cydb.command()
 @c.option('--exchange_type', type=c.Choice(["1", "2"]), prompt='抓取类型：[1. 币安合约; 2. OK合约]', default="1")
-@c.option('--coin_pair', type=str, prompt='币对: [币安合约: BTCUSD_201225]', required=True)
+@c.option('--coin_pair', type=str, prompt='币对: [币安合约: BTCUSD_201225, OK合约：BTC-USD-201225]', required=True)
 @c.option('--time_frame', type=str, prompt='K线间隔：5m, 15m ...', required=True)
 @c.pass_context
 def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
@@ -125,6 +128,100 @@ def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
     crawler.time_frame = time_frame
     crawler.save()
 
+
+@cydb.command()
+@c.option('--name', type=str, prompt=True, required=True)
+@c.option('--coin_pair', type=str, prompt=True, required=True)
+@c.option('--leverage', type=float, prompt=True, required=True)
+@c.option('--time_interval', type=str, prompt='TimeInterval(5m/15m/1h...)', required=True)
+@c.option('--parameters', type=str, prompt='Parameters(2.2,3.0,123...)', required=True)
+@c.pass_context
+def add_strategy(ctx, name, coin_pair, leverage, time_interval, parameters):
+    """添加策略配置"""
+    connect_db_env(db_name=DB_CONFIG)
+    connect_db_env(db_name=DB_QUANT)
+    strategy = StrategyCfg()
+    strategy.identifier = Sequence.fetch_next_id(CN_STRATEGY)
+    strategy.strategy_name = name
+    strategy.coin_pair = coin_pair
+    strategy.time_interval = time_interval
+    strategy.leverage = leverage
+
+    splitted = parameters.split(',')
+    formatted = map(lambda x: float(x), splitted)
+    strategy.parameters = list(formatted)
+    strategy.save()
+
+
+@cydb.command()
+@c.pass_context
+def strategies(ctx):
+    """所有策略"""
+    connect_db_env(db_name=DB_QUANT)
+    strategies = list(StrategyCfg.objects)
+    for s in strategies:
+        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters))
+
+
+@cydb.command()
+@c.option('--class_name', type=str, prompt=True, required=True)
+@c.option('--desc', type=str, prompt=True, required=True)
+@c.pass_context
+def add_carrier_cfg(ctx, class_name, desc):
+    """添加搬砖人配置"""
+    connect_db_env(db_name=DB_QUANT)
+    connect_db_env(db_name=DB_CONFIG)
+
+    bc_config = BrickCarrierCfg()
+    bc_config.class_name = class_name
+    bc_config.desc = desc
+
+    ccxt_cfgs = list(CCXTConfiguration.objects)
+    for cfg in ccxt_cfgs:
+        print("{}\t{}...\t{}\t{}".format(cfg.identifier, cfg.app_key[:5], CCXTExchangeType(cfg.e_type).__str__(), cfg.desc))
+    while True:
+        ccxt_cfg_id = c.prompt('使用的 ccxt 配置 ID', type=int)
+        if ccxt_cfg_id not in list(map(lambda x: x.identifier, ccxt_cfgs)):
+            print('ccxt config not exist.')
+            continue
+        break
+    bc_config.ccxt_cfg_id = ccxt_cfg_id
+
+    strategies = list(StrategyCfg.objects)
+    for s in strategies:
+        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters))
+    while True:
+        strategy_id_str = c.prompt("选择策略 ID (多个用','隔开)")
+        try:
+            strategy_ids = strategy_id_str.split(',')
+        except Exception as _:
+            strategy_ids = [strategy_id_str]
+        # to float
+        strategy_ids = list(map(lambda x: int(x), strategy_ids))
+
+        can_go_on = True
+        for id in strategy_ids:
+            if id not in list(map(lambda x: x.identifier, strategies)):
+                print('strategy id {} not exist.'.format(id))
+                can_go_on = False
+                break
+        if can_go_on:
+            break
+
+    bc_config.strategies = strategy_ids
+    bc_config.identifier = Sequence.fetch_next_id(CN_BRICK_CARRIER)
+    bc_config.save()
+
+
+@cydb.command()
+@c.pass_context
+def brick_carriers(ctx):
+    """搬砖人配置"""
+    connect_db_env(db_name=DB_QUANT)
+    cfgs = list(BrickCarrierCfg.objects)
+    print("ID\tCCXT\tNAME\tSTRAs\tDESC")
+    for s in cfgs:
+        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.ccxt_cfg_id, s.class_name, s.strategies, s.desc))
 
 @c.group()
 @c.option('--db-user', envvar='DB_CLI_USER', required=True)

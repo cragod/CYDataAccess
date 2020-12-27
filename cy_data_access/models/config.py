@@ -6,7 +6,7 @@ from enum import IntEnum
 class CCXTExchangeType(IntEnum):
     """交易所类型"""
     Unknown = 0
-    Okex = 1
+    OKEx = 1
     HuobiPro = 2
     Binance = 3
 
@@ -40,15 +40,16 @@ class CCXTConfiguration(MongoModel):
     app_secret = fields.CharField(min_length=3)
     app_pw = fields.CharField(min_length=0)
     e_type = fields.IntegerField(mongo_name='type')
+    desc = fields.CharField()
 
     class Meta:
         collection_name = CN_CCXT_CONFIG
         connection_alias = DB_CONFIG
 
     @classmethod
-    def configuration_with(cls, type: CCXTExchangeType):
+    def configuration_with(cls, type: CCXTExchangeType, desc=None):
         try:
-            ccxt_config = cls.objects.get({'type': type.value})
+            ccxt_config = list(cls.objects.raw({'type': type.value, 'desc': desc}).order_by([('identifier', 1)]).limit(1))[0]
             return ccxt_config
         except Exception as e:
             print(str(e))
