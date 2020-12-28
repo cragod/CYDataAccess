@@ -54,3 +54,7 @@ class CCXTConfiguration(MongoModel):
         except Exception as e:
             print(str(e))
             return None
+
+    @classmethod
+    def configuration_with_id(cls, cfg_id):
+        return cls.objects.get({'_id': cfg_id})

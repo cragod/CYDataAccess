@@ -13,7 +13,7 @@ class BrickCarrierCfg(MongoModel):
     class Meta:
         connection_alias = DB_QUANT
         collection_name = CN_BRICK_CARRIER
-        
+
 
 class StrategyCfg(MongoModel):
     """策略配置"""
@@ -23,6 +23,7 @@ class StrategyCfg(MongoModel):
     strategy_name = fields.CharField()
     parameters = fields.ListField()
     time_interval = fields.CharField()
+    stop = fields.BooleanField()
 
     class Meta:
         connection_alias = DB_QUANT
