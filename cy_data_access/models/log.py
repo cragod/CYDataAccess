@@ -6,6 +6,7 @@ from enum import IntEnum
 class LogType(IntEnum):
     AIM = 0
     AIP = 1
+    OK_DELIVERY = 2
 
 
 class LogInfo(MongoModel):
