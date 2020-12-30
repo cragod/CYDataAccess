@@ -28,3 +28,25 @@ class StrategyCfg(MongoModel):
     class Meta:
         connection_alias = DB_QUANT
         collection_name = CN_STRATEGY
+
+
+class StrategyOrder(MongoModel):
+    """策略订单"""
+    strategy_id = fields.IntegerField()
+    order_id = fields.IntegerField()
+    order_desc = fields.DictField()
+    date = fields.DateTimeField()
+
+    class Meta:
+        connection_alias = DB_QUANT
+        collection_name = CN_STRATEGY_ORDER
+
+    @classmethod
+    def order_with(cls, strategy_id, order_id):
+        try:
+            return cls.objects.get({'strategy_id': strategy_id, 'order_id': order_id})
+        except Exception:
+            order = StrategyOrder()
+            order.strategy_id = strategy_id
+            order.order_id = order_id
+            return order

@@ -18,6 +18,7 @@ DB_QUANT = 'quant'
 
 CN_STRATEGY = 'strategy'  # 交易策略
 CN_BRICK_CARRIER = 'brick_carrier'  # 搬砖器配置
+CN_STRATEGY_ORDER = 's_order'  # 策略订单
 
 # ==== Position ====
 
