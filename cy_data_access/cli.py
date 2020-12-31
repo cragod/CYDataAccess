@@ -31,7 +31,7 @@ def cydb(ctx, db_user, db_pwd, db_host):
 @c.option('--desc', type=str, prompt=True, required=False)
 @c.pass_context
 def add_ccxt_config(ctx, key, secret, password, type, desc):
-    # 添加 ccxt 配置
+    """添加 ccxt 配置"""
     # connect db
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
     # save config
@@ -54,7 +54,7 @@ def add_ccxt_config(ctx, key, secret, password, type, desc):
 @cydb.command()
 @c.pass_context
 def aims_profit(ctx):
-    # AMIS 收益
+    """AMIS 收益"""
     pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
     # connect db
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
@@ -71,7 +71,7 @@ def aims_profit(ctx):
 @cydb.command()
 @c.pass_context
 def aims_position(ctx):
-    # AMIS 仓位
+    """AMIS 仓位"""
     pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
     # connect db
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_POSITION)
@@ -154,13 +154,45 @@ def add_strategy(ctx, name, coin_pair, leverage, time_interval, parameters):
 
 
 @cydb.command()
+@c.option('--type', type=c.Choice(['stop', 'resume']), prompt=True, required=True)
+@c.pass_context
+def switch_strategy(ctx, type):
+    """调整策略开关"""
+    connect_db_env(db_name=DB_CONFIG)
+    connect_db_env(db_name=DB_QUANT)
+
+    strategies = list(StrategyCfg.objects)
+    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
+    for s in strategies:
+        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
+    while True:
+        strategy_id_str = c.prompt("选择要{}策略 ID (多个用','隔开)".format('停止' if type == 'stop' else '恢复'))
+        try:
+            strategy_ids = strategy_id_str.split(',')
+        except Exception as _:
+            strategy_ids = [strategy_id_str]
+
+        strategy_ids = list(map(lambda x: int(x), strategy_ids))
+        for id in strategy_ids:
+            if id not in list(map(lambda x: x.identifier, strategies)):
+                print('strategy id {} not exist.'.format(id))
+                return
+        break
+    for id in strategy_ids:
+        s = StrategyCfg.objects.get({'_id': id})
+        s.stop = type == 'stop'
+        s.save()
+
+
+@cydb.command()
 @c.pass_context
 def strategies(ctx):
     """所有策略"""
     connect_db_env(db_name=DB_QUANT)
     strategies = list(StrategyCfg.objects)
+    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
     for s in strategies:
-        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters))
+        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
 
 
 @cydb.command()
@@ -214,7 +246,59 @@ def add_carrier_cfg(ctx, class_name, desc):
 
 
 @cydb.command()
+@c.option('--type', type=c.Choice(['add', 'delete']), prompt=True, required=True)
 @c.pass_context
+def carrier_edit_strategy(ctx, type):
+    """搬砖人添加/删除策略"""
+    connect_db_env(db_name=DB_QUANT)
+    connect_db_env(db_name=DB_CONFIG)
+
+    cfgs = list(BrickCarrierCfg.objects)
+    print("ID\tCCXT\tNAME\tSTRAs\tDESC")
+    for s in cfgs:
+        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.ccxt_cfg_id, s.class_name, s.strategies, s.desc))
+    while True:
+        bc_cfg_id = c.prompt("选择搬砖人", type=int)
+        try:
+            bc_cfg = BrickCarrierCfg.objects.get({'_id': bc_cfg_id})
+            print("{}\t{}\t{}\t{}\t{}".format(bc_cfg.identifier, bc_cfg.ccxt_cfg_id, bc_cfg.class_name, bc_cfg.strategies, bc_cfg.desc))
+            break
+        except Exception as _:
+            print(bc_cfg_id, "不存在")
+            continue
+
+    strategies = list(StrategyCfg.objects)
+    print('-' * 15)
+    print('策略们:')
+    for s in strategies:
+        print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters))
+    while True:
+        strategy_id_str = c.prompt("选择策略 ID (多个用','隔开)")
+        try:
+            strategy_ids = strategy_id_str.split(',')
+        except Exception as _:
+            strategy_ids = [strategy_id_str]
+
+        strategy_ids = list(map(lambda x: int(x), strategy_ids))
+        for id in strategy_ids:
+            if id not in list(map(lambda x: x.identifier, strategies)):
+                print('strategy id {} not exist.'.format(id))
+                return
+        break
+
+    if type == 'add':
+        bc_cfg.strategies = list(set(bc_cfg.strategies + strategy_ids))
+    else:
+        bc_cfg.strategies = [x for x in bc_cfg.strategies if x not in strategy_ids]
+    # remove invalid strategies
+    bc_cfg.strategies = [x for x in bc_cfg.strategies if x in [y.identifier for y in strategies]]
+    bc_cfg.save()
+    print('添加完成:' if type == 'add' else '删除完成')
+    print("{}\t{}\t{}\t{}\t{}".format(bc_cfg.identifier, bc_cfg.ccxt_cfg_id, bc_cfg.class_name, bc_cfg.strategies, bc_cfg.desc))
+
+
+@ cydb.command()
+@ c.pass_context
 def brick_carriers(ctx):
     """搬砖人配置"""
     connect_db_env(db_name=DB_QUANT)
@@ -223,11 +307,14 @@ def brick_carriers(ctx):
     for s in cfgs:
         print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.ccxt_cfg_id, s.class_name, s.strategies, s.desc))
 
-@c.group()
-@c.option('--db-user', envvar='DB_CLI_USER', required=True)
-@c.option('--db-pwd', envvar='DB_CLI_PWD', required=True)
-@c.option('--db-host', default='127.0.0.1:27017', required=True)
-@c.pass_context
+# ===================== Financial ============================
+
+
+@ c.group()
+@ c.option('--db-user', envvar='DB_CLI_USER', required=True)
+@ c.option('--db-pwd', envvar='DB_CLI_PWD', required=True)
+@ c.option('--db-host', default='127.0.0.1:27017', required=True)
+@ c.pass_context
 def cyfin(ctx, db_user, db_pwd, db_host):
     ctx.ensure_object(dict)
     ctx.obj['db_u'] = db_user
@@ -240,12 +327,12 @@ def cyfin(ctx, db_user, db_pwd, db_host):
     print()
 
 
-@cyfin.command()
-@c.option('--name', type=str, prompt=True, required=True)
-@c.option('--balance', type=float, prompt=True, default=0, required=True)
-@c.option('--level',
-          type=c.Choice(['SSR', 'SUPER', 'A'], case_sensitive=False), default='A', prompt=True)
-@c.pass_context
+@ cyfin.command()
+@ c.option('--name', type=str, prompt=True, required=True)
+@ c.option('--balance', type=float, prompt=True, default=0, required=True)
+@ c.option('--level',
+           type=c.Choice(['SSR', 'SUPER', 'A'], case_sensitive=False), default='A', prompt=True)
+@ c.pass_context
 def add_holder(ctx, name, balance, level):
     """添加持仓人"""
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
@@ -263,11 +350,11 @@ def add_holder(ctx, name, balance, level):
     holder.save()
 
 
-@cyfin.command()
-@c.option('--holder_id', type=int, prompt=True, required=True)
-@c.option('--operation', type=c.Choice(['deposit', 'withdraw'], case_sensitive=False), prompt=True, default='deposit', required=True)
-@c.option('--amount', type=float, prompt='Amount[USDT]')
-@c.pass_context
+@ cyfin.command()
+@ c.option('--holder_id', type=int, prompt=True, required=True)
+@ c.option('--operation', type=c.Choice(['deposit', 'withdraw'], case_sensitive=False), prompt=True, default='deposit', required=True)
+@ c.option('--amount', type=float, prompt='Amount[USDT]')
+@ c.pass_context
 def update_holder_balance(ctx, holder_id, operation, amount):
     """更新持仓人余额"""
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
@@ -297,9 +384,9 @@ def update_holder_balance(ctx, holder_id, operation, amount):
         return
 
 
-@cyfin.command()
-@c.option('--holder_id', type=int, prompt=True, required=True)
-@c.pass_context
+@ cyfin.command()
+@ c.option('--holder_id', type=int, prompt=True, required=True)
+@ c.pass_context
 def holder_events(ctx, holder_id):
     """持仓人事件记录"""
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
@@ -355,11 +442,11 @@ def holder_events(ctx, holder_id):
             holder_id, record['name'], record['balance_before'], record['balance_after'], record['event_content'], record['event_note'], record['event_date']))
 
 
-@cyfin.command()
-@c.option('--event_desc', type=str, required=True, prompt=True)
-@c.option('--profit', type=float, required=True, prompt=True)
-@c.option('--fixed_percent', type=float, required=True, prompt=True)
-@c.pass_context
+@ cyfin.command()
+@ c.option('--event_desc', type=str, required=True, prompt=True)
+@ c.option('--profit', type=float, required=True, prompt=True)
+@ c.option('--fixed_percent', type=float, required=True, prompt=True)
+@ c.pass_context
 def distribute_profit(ctx, event_desc, profit, fixed_percent):
     """分配利润"""
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
