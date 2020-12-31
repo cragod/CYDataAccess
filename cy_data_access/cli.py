@@ -129,6 +129,61 @@ def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
     crawler.save()
 
 
+def __all_crawler_cfgs():
+    crawlers = list(CrawlerRealtimeConfig.objects.order_by([('active', 1)]))
+    print('Index\tEXG_TYPE\tCOIN\tTIME_FRAME\tACTIVE')
+    for index, cc in enumerate(crawlers):
+        print('{}\t{}\t{}\t{}\t{}'.format(index, cc.exchange_type, cc.coin_pair, cc.time_frame, cc.active))
+
+
+@cydb.command()
+@c.pass_context
+def crawler_configs(ctx):
+    """所有抓K线配置"""
+    connect_db_env(db_name=DB_CRAWLER)
+    __all_crawler_cfgs()
+
+
+@cydb.command()
+@c.option('--type', type=c.Choice(['active', 'deactive', 'delete']), prompt=True, required=True)
+@c.pass_context
+def edit_crawler_configs(ctx, type):
+    '''调整抓取配置'''
+    connect_db_env(db_name=DB_CRAWLER)
+    __all_crawler_cfgs()
+    crawlers = list(CrawlerRealtimeConfig.objects)
+    while True:
+        index_strs = c.prompt("选择要{}的 Index (多个用','隔开)".format('停止' if type == 'deactive' else '恢复' if type == 'deactive' else '删除'))
+        try:
+            indexes = index_strs.split(',')
+        except Exception as _:
+            indexes = [indexes]
+
+        indexes = list(map(lambda x: int(x), indexes))
+
+        for index in indexes:
+            if index < 0 or index >= len(crawlers):
+                print('index {} out of range.'.format(index))
+                return
+        break
+
+    for index in indexes:
+        cc = crawlers[index]
+        if type == 'delete':
+            cc.delete()
+        else:
+            cc.active = type == 'active'
+            cc.save()
+    __all_crawler_cfgs()
+
+
+def __all_strategies():
+    strategies = list(StrategyCfg.objects)
+    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
+    for s in strategies:
+        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
+
+
 @cydb.command()
 @c.option('--name', type=str, prompt=True, required=True)
 @c.option('--coin_pair', type=str, prompt=True, required=True)
@@ -151,22 +206,22 @@ def add_strategy(ctx, name, coin_pair, leverage, time_interval, parameters):
     formatted = map(lambda x: float(x), splitted)
     strategy.parameters = list(formatted)
     strategy.save()
+    __all_strategies()
 
 
 @cydb.command()
-@c.option('--type', type=c.Choice(['stop', 'resume']), prompt=True, required=True)
+@c.option('--type', type=c.Choice(['stop', 'resume', 'delete']), prompt=True, required=True)
 @c.pass_context
-def switch_strategy(ctx, type):
+def edit_strategy(ctx, type):
     """调整策略开关"""
     connect_db_env(db_name=DB_CONFIG)
     connect_db_env(db_name=DB_QUANT)
 
+    __all_strategies()
+
     strategies = list(StrategyCfg.objects)
-    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
-    for s in strategies:
-        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
     while True:
-        strategy_id_str = c.prompt("选择要{}策略 ID (多个用','隔开)".format('停止' if type == 'stop' else '恢复'))
+        strategy_id_str = c.prompt("选择要{}策略 ID (多个用','隔开)".format('停止' if type == 'stop' else '恢复' if type == 'resume' else '删除'))
         try:
             strategy_ids = strategy_id_str.split(',')
         except Exception as _:
@@ -180,8 +235,13 @@ def switch_strategy(ctx, type):
         break
     for id in strategy_ids:
         s = StrategyCfg.objects.get({'_id': id})
-        s.stop = type == 'stop'
-        s.save()
+        if type == 'delete':
+            s.delete()
+        else:
+            s.stop = type == 'stop'
+            s.save()
+
+    __all_strategies()
 
 
 @cydb.command()
@@ -189,10 +249,7 @@ def switch_strategy(ctx, type):
 def strategies(ctx):
     """所有策略"""
     connect_db_env(db_name=DB_QUANT)
-    strategies = list(StrategyCfg.objects)
-    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
-    for s in strategies:
-        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
+    __all_strategies()
 
 
 @cydb.command()
