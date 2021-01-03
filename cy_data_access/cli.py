@@ -385,7 +385,7 @@ def strategy_orders(ctx, cp):
         }
     }]
     for s in list(StrategyOrder.objects.aggregate(*pipeline)):
-        if cp is not None and cp in s['strategy']['coin_pair']:
+        if cp is None or cp in s['strategy']['coin_pair']:
             print(s['order_id'], "{}({})".format(s['strategy']['strategy_name'], s['strategy']['coin_pair']))
             desc = s['order_desc']
             for (i, k) in enumerate(desc):
