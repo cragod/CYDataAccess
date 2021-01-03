@@ -12,6 +12,10 @@ class CandleRecord(MongoModel):
     low_price = fields.Decimal128Field(mongo_name='low')
     close_price = fields.Decimal128Field(mongo_name='close')
     volume = fields.Decimal128Field()
+    quote_volume = fields.Decimal128Field()
+    trade_num = fields.Decimal128Field()
+    taker_buy_base_asset_volume = fields.Decimal128Field()
+    taker_buy_quote_asset_volume = fields.Decimal128Field()
 
     class Meta:
         connection_alias = DB_MARKET
