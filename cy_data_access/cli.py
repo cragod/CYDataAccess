@@ -354,8 +354,8 @@ def carrier_edit_strategy(ctx, type):
     print("{}\t{}\t{}\t{}\t{}".format(bc_cfg.identifier, bc_cfg.ccxt_cfg_id, bc_cfg.class_name, bc_cfg.strategies, bc_cfg.desc))
 
 
-@ cydb.command()
-@ c.pass_context
+@cydb.command()
+@c.pass_context
 def brick_carriers(ctx):
     """搬砖人配置"""
     connect_db_env(db_name=DB_QUANT)
@@ -363,6 +363,33 @@ def brick_carriers(ctx):
     print("ID\tCCXT\tNAME\tSTRAs\tDESC")
     for s in cfgs:
         print("{}\t{}\t{}\t{}\t{}".format(s.identifier, s.ccxt_cfg_id, s.class_name, s.strategies, s.desc))
+
+
+@cydb.command()
+@c.option('--cp', required=False, default=None)
+@c.pass_context
+def strategy_orders(ctx, cp):
+    """策略订单信息"""
+    connect_db_env(db_name=DB_QUANT)
+    pipeline = [{
+        "$lookup": {
+            "from": "strategy",
+            "localField": "strategy_id",
+            "foreignField": "_id",
+            "as": "strategy"
+        },
+    }, {
+        "$unwind": {
+            "path": "$strategy",
+            "preserveNullAndEmptyArrays": True
+        }
+    }]
+    for s in list(StrategyOrder.objects.aggregate(*pipeline)):
+        if cp is not None and cp in s['strategy']['coin_pair']:
+            print(s['order_id'], "{}({})".format(s['strategy']['strategy_name'], s['strategy']['coin_pair']))
+            desc = s['order_desc']
+            for (i, k) in enumerate(desc):
+                print("{}: {}".format(k, desc[k]))
 
 # ===================== Financial ============================
 
