@@ -109,7 +109,7 @@ class StrategyPosition(MongoModel):
     # 策略的 ID
     strategy_id = fields.IntegerField()
     # 策略仓位信息
-    strategy_info = fields.DictField()
+    strategy_info = fields.DictField(default=None)
 
     class Meta:
         connection_alias = DB_POSITION
@@ -122,4 +122,4 @@ class StrategyPosition(MongoModel):
             return cls.objects.raw({'strategy_id': strategy_id}).first()
         except Exception as e:
             print(e)
-            return cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS))
+            return cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS), strategy_id=strategy_id)
