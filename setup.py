@@ -52,6 +52,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/cragod/CYDataAccess',
-    version='0.4.4',
+    version='0.4.5',
     zip_safe=False,
 )
