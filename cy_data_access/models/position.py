@@ -122,4 +122,6 @@ class StrategyPosition(MongoModel):
             return cls.objects.raw({'strategy_id': strategy_id}).first()
         except Exception as e:
             print(e)
-            return cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS), strategy_id=strategy_id)
+            position = cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS), strategy_id=strategy_id)
+            position.save()
+            return position
