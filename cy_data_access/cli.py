@@ -179,9 +179,9 @@ def edit_crawler_configs(ctx, type):
 
 def __all_strategies():
     strategies = list(StrategyCfg.objects)
-    print("ID\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
+    print("ID\tNAME\tCOIN_PAIR\tTIME_INTERVAL\tLEVERAGE\tPARAMS\tSTOP")
     for s in strategies:
-        print("{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
+        print("{}\t{}\t{}\t{}\t{}\t{}\t{}".format(s.identifier, s.strategy_name, s.coin_pair, s.time_interval, s.leverage, s.parameters, s.stop))
 
 
 @cydb.command()
