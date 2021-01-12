@@ -7,6 +7,7 @@ class LogType(IntEnum):
     AIM = 0
     AIP = 1
     OK_DELIVERY_1 = 2
+    OK_DELIVERY_SUB_1 = 3
 
 
 class LogInfo(MongoModel):
