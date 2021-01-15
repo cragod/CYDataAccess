@@ -24,7 +24,7 @@ class LogInfo(MongoModel):
     @classmethod
     def grouped_unfetched_logs(cls, types):
         try:
-            all_unfetcheds = list(cls.objects.raw({'fetched': False, 'type': {'$in': types}}).order_by([('create', 1)]))
+            all_unfetcheds = list(cls.objects.raw({'fetched': True, 'type': {'$in': types}}).order_by([('log', 1)]))
             if not all_unfetcheds:
                 return []
             else:
