@@ -12,6 +12,8 @@ CN_CCXT_CONFIG = 'cxt'
 
 DB_MARKET = 'market'
 
+CN_NEUTRAL_PANEL = 'neutral_candle_data'
+
 # ==== Strategy ====
 
 DB_QUANT = 'quant'

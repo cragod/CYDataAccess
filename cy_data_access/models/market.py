@@ -1,6 +1,6 @@
 from pymodm import MongoModel, fields
 from bson.codec_options import CodecOptions
-from ..connection.connect import DB_MARKET
+from ..connection.connect import *
 
 
 class CandleRecord(MongoModel):
@@ -49,3 +49,36 @@ def candle_record_class(collection_name) -> CandleRecord:
     _cls = type(class_name, CandleRecord.__bases__, dict(CandleRecord.__dict__))
     _cls._mongometa.collection_name = collection_name
     return _cls
+
+
+class NeutralPanelCandleRecord(MongoModel):
+    """中性策略原始数据"""
+
+    candle_begin_time = fields.DateTimeField()
+    symbol = fields.CharField()
+    open = fields.FloatField()
+    high = fields.FloatField()
+    low = fields.FloatField()
+    close = fields.FloatField()
+    volume = fields.FloatField()
+    quote_volume = fields.FloatField()
+    trade_num = fields.FloatField()
+    taker_buy_base_asset_volume = fields.FloatField()
+    taker_buy_quote_asset_volume = fields.FloatField()
+    avg_price = fields.FloatField()
+
+    class Meta:
+        connection_alias = DB_MARKET
+        collection_name = CN_NEUTRAL_PANEL
+        codec_options = CodecOptions(tz_aware=True)
+
+    @classmethod
+    def bulk_insert_records(cls, json_list):
+        """批量插入"""
+        def map_func(rec):
+            ins = NeutralPanelCandleRecord()
+            for key in rec:
+                setattr(ins, key, rec[key])
+            return ins
+        inses = list(map(map_func, list(json_list)))
+        NeutralPanelCandleRecord.objects.bulk_create(inses)
