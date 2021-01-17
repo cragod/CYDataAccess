@@ -112,8 +112,8 @@ def add_aip_record(ctx, exchange, coin_pair, cost, amount):
 
 
 @cydb.command()
-@c.option('--exchange_type', type=c.Choice(["1", "2"]), prompt='抓取类型：[1. 币安合约; 2. OK合约]', default="1")
-@c.option('--coin_pair', type=str, prompt='币对: [币安合约: BTCUSD_201225, OK合约：BTC-USD-201225]', required=True)
+@c.option('--exchange_type', type=c.Choice(["1", "2", "3"]), prompt='抓取类型：[1. 币安合约; 2. OK合约, 3. 币安永续 USDT]', default="1")
+@c.option('--coin_pair', type=str, prompt='币对: [币安合约: BTCUSD_201225, OK合约：BTC-USD-201225, 币安永续USDT：随便]', required=True)
 @c.option('--time_frame', type=str, prompt='K线间隔：5m, 15m ...', required=True)
 @c.pass_context
 def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
@@ -124,6 +124,8 @@ def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
         crawler.exchange_type = "binance_delivery"
     elif int(exchange_type) == 2:
         crawler.exchange_type = "ok_contract"
+    elif int(exchange_type) == 3:
+        crawler.exchange_type = 'binance_future'
     crawler.coin_pair = coin_pair
     crawler.time_frame = time_frame
     crawler.save()

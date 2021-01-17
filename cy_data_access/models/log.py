@@ -8,6 +8,7 @@ class LogType(IntEnum):
     AIP = 1
     OK_DELIVERY_1 = 2
     OK_DELIVERY_SUB_1 = 3
+    BINANCE_NEUTRAL = 10
 
 
 class LogInfo(MongoModel):
