@@ -110,6 +110,8 @@ class StrategyPosition(MongoModel):
     strategy_id = fields.IntegerField()
     # 策略仓位信息
     strategy_info = fields.DictField(default=None)
+    # 更新时间
+    update_date = fields.DateTimeField()
 
     class Meta:
         connection_alias = DB_POSITION
@@ -119,9 +121,12 @@ class StrategyPosition(MongoModel):
     def position_with(cls, strategy_id):
         """获取仓位信息、无则创建 """
         try:
-            return cls.objects.raw({'strategy_id': strategy_id}).first()
+            obj = cls.objects.raw({'strategy_id': strategy_id}).first()
+            obj.update_date = datetime.now()
+            return obj
         except Exception as e:
             print(e)
             position = cls(identifier=Sequence.fetch_next_id(CN_STRATEGY_POS), strategy_id=strategy_id)
+            position.update_date = datetime.now()
             position.save()
             return position
