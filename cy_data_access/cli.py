@@ -131,6 +131,43 @@ def add_crawler_config(ctx, exchange_type, coin_pair, time_frame):
     crawler.save()
 
 
+@cydb.command()
+@c.option('--exchange_type', type=c.Choice(["1", "2", "3"]), prompt='调整类型：[1. 币安合约; 2. OK合约, 3. 币安永续 USDT]', default="1")
+@c.option('--type', type=c.Choice(['duplicate', 'delete']), prompt=True, required=True)
+@c.option('--from_tail', type=str, prompt=True, required=True)
+@c.option('--to_tail', type=str, prompt=True, required=True)
+@c.pass_context
+def batch_update_crawler_config(ctx, type, exchange_type, from_tail, to_tail):
+    """复制抓K线配置"""
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CRAWLER)
+    __all_crawler_cfgs()
+    exchange_type_str = ""
+    if int(exchange_type) == 1:
+        exchange_type_str = "binance_delivery"
+    elif int(exchange_type) == 2:
+        exchange_type_str = "ok_contract"
+    elif int(exchange_type) == 3:
+        exchange_type_str = 'binance_future'
+    crawlers = list(CrawlerRealtimeConfig.objects.raw({
+        'coin_pair': {"$regex": from_tail, "$options": '-i'},
+        'exchange_type': exchange_type_str,
+        'active': True
+    }))
+    if type == 'duplicate':
+        for crawler in crawlers:
+            n_c = CrawlerRealtimeConfig()
+            n_c.active = crawler.active
+            n_c.time_frame = crawler.time_frame
+            n_c.coin_pair = crawler.coin_pair.replace(from_tail.upper(), to_tail.upper())
+            n_c.exchange_type = exchange_type_str
+            n_c.save()
+    else:
+        for crawler in crawlers:
+            crawler.delete()
+    print('after:')
+    __all_crawler_cfgs()
+
+
 def __all_crawler_cfgs():
     crawlers = list(CrawlerRealtimeConfig.objects.order_by([('active', 1)]))
     print('Index\tEXG_TYPE\tCOIN\tTIME_FRAME\tACTIVE')
@@ -242,7 +279,27 @@ def edit_strategy(ctx, type):
         else:
             s.stop = type == 'stop'
             s.save()
+    __all_strategies()
 
+
+@cydb.command()
+@c.option('--from_tail', type=str, prompt=True, required=True)
+@c.option('--to_tail', type=str, prompt=True, required=True)
+@c.pass_context
+def update_strategy_coin_pair(ctx, from_tail, to_tail):
+    """调整策略开关"""
+    connect_db_env(db_name=DB_CONFIG)
+    connect_db_env(db_name=DB_QUANT)
+
+    __all_strategies()
+
+    strategies = list(StrategyCfg.objects.raw({
+        'coin_pair': {"$regex": from_tail, "$options": '-i'},
+    }))
+    for st in strategies:
+        st.coin_pair = st.coin_pair.replace(from_tail.upper(), to_tail.lower())
+        st.save()
+    print('after')
     __all_strategies()
 
 
