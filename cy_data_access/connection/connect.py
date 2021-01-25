@@ -8,6 +8,13 @@ DB_CONFIG = 'cfg'
 CN_SEQUENCE = 'sequence'
 CN_CCXT_CONFIG = 'cxt'
 
+# ==== User ====
+
+DB_USER = 'user'
+
+CN_USER_AUTH = 'auth'
+CN_USER_INFO = 'info'
+
 # ==== Market ====
 
 DB_MARKET = 'market'

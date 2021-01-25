@@ -13,7 +13,7 @@ from .models.quant import *
 @c.group()
 @c.option('--db-user', envvar='DB_CLI_USER', required=True)
 @c.option('--db-pwd', envvar='DB_CLI_PWD', required=True)
-@c.option('--db-host', default='127.0.0.1:27017', required=True)
+@c.option('--db-host', default='DB_HOST', required=True)
 @c.pass_context
 def cydb(ctx, db_user, db_pwd, db_host):
     ctx.ensure_object(dict)
