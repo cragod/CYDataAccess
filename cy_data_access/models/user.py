@@ -65,11 +65,13 @@ def login_with(account, encoded_pwd):
         acc.token = md5.hexdigest()
         acc.renew_expire_date()  # 更新过期时间
         # 生成 Token
-        user_info = UserInfo.objects.get({'_id': acc.uid})
-        user_info.token = acc.token
+        user_info = UserInfo.objects.raw({'_id': acc.uid}).project({'_id': 0, '_cls': 0}).limit(1).values()[0]
+        user_info['id'] = acc.uid
+        user_info['token'] = acc.token
         return user_info
     except Exception as e:
         print(str(e))
+        raise ValueError('账号或密码错误')
 
 
 def auth_token(account, token):
