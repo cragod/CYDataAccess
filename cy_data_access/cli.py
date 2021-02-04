@@ -465,8 +465,8 @@ def cyfin(ctx, db_user, db_pwd, db_host):
     ctx.obj['db_h'] = db_host
     connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
     print("Current holders:")
-    for holder in list(Holder.objects.project({'id': 1, "name": 1, 'balance': 1, 'update_date': 1}).values()):
-        print("{}:\t{}\t{}\t{}".format(holder['_id'], holder['name'], holder['balance'], holder['update_date']))
+    for holder in list(Holder.objects.project({'id': 1, "name": 1, 'balance': 1, 'update_date': 1, 'status': 1}).values()):
+        print("{}:\t{}\t{}\t{}\t{}".format(holder['_id'], holder['name'], holder['balance'], holder['status'], holder['update_date']))
     print()
 
 
@@ -521,6 +521,25 @@ def update_holder_balance(ctx, holder_id, operation, amount):
         holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
         holder.save()
         record.save()
+        holder.print_desc()
+    except Exception as e:
+        print(str(e))
+        return
+
+
+@ cyfin.command()
+@ c.option('--holder_id', type=int, prompt=True, required=True)
+@ c.option('--status', type=c.Choice(['normal', 'invalid'], case_sensitive=False), prompt=True, default='invalid', required=True)
+@ c.pass_context
+def update_holder_status(ctx, holder_id, status):
+    """更新持仓人状态"""
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_FINANCIAL)
+    connect_db(ctx.obj['db_u'], ctx.obj['db_p'], ctx.obj['db_h'], DB_CONFIG)
+    try:
+        holder = Holder.objects.get({'_id': holder_id})
+        holder.status = HolderStatus.INVALID if status == 'invalid' else HolderStatus.NORMAL
+        holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
+        holder.save()
         holder.print_desc()
     except Exception as e:
         print(str(e))
@@ -608,7 +627,9 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
     fp_holder = None
     if fixed_percent > 0:
         try:
-            fp_holder = Holder.objects.get({'level': HolderLevel.SSR.value})
+            fp_holder = Holder.objects.get({
+                'level': HolderLevel.SSR.value
+            })
             fp_holder.balance += fixed_profit
             fp_holder.update_date = datetime.now().replace(tzinfo=pytz.utc)
             record = Record.profit_record(fp_holder.id, event.id, fp_holder.balance, fixed_profit)
@@ -660,8 +681,9 @@ def distribute_profit(ctx, event_desc, profit, fixed_percent):
             }
         ]
         percents = {x['_id']: x['percent'] for x in list(Holder.objects.raw(filter).aggregate(*pipeline))}
+        print(percents, sum([percents[x] for x in percents]))
         # 分配
-        if sum([percents[x] for x in percents]) == 1:
+        if abs(sum([percents[x] for x in percents]) - 1) < 1e-5:
             print('分配内容：', event.content, event.note)
             print('拟分配方案：')
             if fp_holder is not None:
