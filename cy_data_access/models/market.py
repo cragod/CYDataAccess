@@ -37,9 +37,14 @@ class CandleRecord(MongoModel):
         return results
 
 
-def candle_record_class_with_components(exchange_name, coin_pair, time_frame, coin_tail='') -> CandleRecord:
+def candle_record_class_with_components(exchange_name, coin_pair, time_frame, coin_tail=''):
     """Convenience"""
     return candle_record_class('{}_{}{}_{}'.format(exchange_name.lower(), coin_pair.formatted('_').lower(), coin_tail, time_frame.value.lower()))
+
+
+def candle_record_class_with_str_components(exchange_name, symbol, time_frame_str, market_type):
+    """Convenience"""
+    return candle_record_class('{}_{}_{}_{}'.format(exchange_name, symbol, time_frame_str, market_type).lower())
 
 
 def candle_record_class(collection_name) -> CandleRecord:

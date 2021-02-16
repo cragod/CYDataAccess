@@ -1,5 +1,6 @@
 import os
 from pymodm.connection import connect
+from pymongo import MongoClient
 
 # ==== Configuration ====
 
@@ -77,3 +78,24 @@ def connect_db(user, password, host='127.0.0.1:27017', db_name=None):
 
 def connect_db_env(db_name=None):
     connect_db(os.environ['DB_MNR_USER'], os.environ['DB_MNR_PWD'], os.environ['DB_HOST'], db_name)
+
+
+def connect_db_client_by_env():
+    uri = "mongodb://{}:{}@{}/?authSource=admin".format(os.environ['DB_MNR_USER'], os.environ['DB_MNR_PWD'], os.environ['DB_HOST'])
+    client = MongoClient(uri)
+    return client
+
+
+def connect_db_and_save_json_list(db_name, collection_name, json_list):
+    client = connect_db_client_by_env()
+    db = client[db_name]
+    db.drop_collection(collection_name)
+    collection = db[collection_name]
+    collection.insert_many(json_list)
+
+
+def connect_db_and_read_df(db_name, collection_name, find_qeury={}, projection={"_id": 0}):
+    client = connect_db_client_by_env()
+    db = client[db_name]
+    collection = db[collection_name]
+    return collection.find(find_qeury, projection)
