@@ -41,6 +41,8 @@ CN_AIP_RECORDS = 'aip_record'
 
 CN_STRATEGY_POS = 'strategy_position '
 
+CN_NEUTRAL_SELECTION = 'neutral_selection'
+
 # ==== Backtest ====
 
 DB_BACKTEST = 'backtest'
@@ -86,10 +88,11 @@ def connect_db_client_by_env():
     return client
 
 
-def connect_db_and_save_json_list(db_name, collection_name, json_list):
+def connect_db_and_save_json_list(db_name, collection_name, json_list, drop=True):
     client = connect_db_client_by_env()
     db = client[db_name]
-    db.drop_collection(collection_name)
+    if drop:
+        db.drop_collection(collection_name)
     collection = db[collection_name]
     collection.insert_many(json_list)
 
