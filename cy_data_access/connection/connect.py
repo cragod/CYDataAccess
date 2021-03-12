@@ -42,6 +42,8 @@ CN_AIP_RECORDS = 'aip_record'
 CN_STRATEGY_POS = 'strategy_position '
 
 CN_NEUTRAL_SELECTION = 'neutral_selection'
+CN_NEUTRAL_LAST_SELECTION = 'last_selection'
+CN_NEUTRAL_RESONANCE = 'neutral_resonance'
 
 # ==== Backtest ====
 
