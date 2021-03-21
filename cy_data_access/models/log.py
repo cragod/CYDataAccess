@@ -9,6 +9,7 @@ class LogType(IntEnum):
     OK_DELIVERY_1 = 2
     OK_DELIVERY_SUB_1 = 3
     OK_DELIVERY_SUB_2 = 4
+    BNC_FUTURE_CTA = 5
     BINANCE_NEUTRAL = 10
 
 
