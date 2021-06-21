@@ -22,13 +22,15 @@ DB_MARKET = 'market'
 
 CN_NEUTRAL_PANEL = 'neutral_candle_data'
 
-# ==== Strategy ====
+# ==== Quant ====
 
 DB_QUANT = 'quant'
 
 CN_STRATEGY = 'strategy'  # 交易策略
 CN_BRICK_CARRIER = 'brick_carrier'  # 搬砖器配置
 CN_STRATEGY_ORDER = 's_order'  # 策略订单
+
+CN_STRATEGY_ORDER_VIEW = 'strategy_order'
 
 # ==== Position ====
 
